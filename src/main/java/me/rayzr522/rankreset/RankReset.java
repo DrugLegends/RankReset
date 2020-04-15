@@ -1,13 +1,19 @@
 package me.rayzr522.rankreset;
 
 import me.rayzr522.rankreset.command.CommandRankReset;
+import me.rayzr522.rankreset.listeners.PlayerListener;
 import me.rayzr522.rankreset.utils.MessageHandler;
+import net.milkbowl.vault.permission.Permission;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Level;
 
 /**
@@ -16,6 +22,7 @@ import java.util.logging.Level;
 public class RankReset extends JavaPlugin {
     private static RankReset instance;
     private MessageHandler messages = new MessageHandler();
+    private Permission permissions;
 
     /**
      * @return The current instance of RankReset.
@@ -26,6 +33,12 @@ public class RankReset extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        if (!setupPermissions()) {
+            getLogger().severe("Failed to connect to any permissions plugin!");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+
         instance = this;
 
         // Load configs
@@ -33,12 +46,21 @@ public class RankReset extends JavaPlugin {
 
         // Set up commands
         getCommand("rankreset").setExecutor(new CommandRankReset(this));
+
+        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
     }
 
     @Override
     public void onDisable() {
         instance = null;
     }
+
+    private boolean setupPermissions() {
+        RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
+        permissions = rsp.getProvider();
+        return permissions != null;
+    }
+
 
     /**
      * (Re)loads all configs from the disk
@@ -127,4 +149,27 @@ public class RankReset extends JavaPlugin {
         return messages;
     }
 
+    public void triggerReset() {
+        Bukkit.getOnlinePlayers()
+                .forEach(player -> player.kickPlayer("Resetting ranks..."));
+
+        getConfig().set("last-reset", System.currentTimeMillis());
+        saveConfig();
+    }
+
+    public boolean shouldReset(Player player) {
+        return player.getLastPlayed() <= getConfig().getLong("last-reset");
+    }
+
+    public List<String> getDefaultRanks() {
+        return getConfig().getStringList("default-ranks");
+    }
+
+    public List<String> getRanksToPreserve() {
+        return getConfig().getStringList("ranks-to-preserve");
+    }
+
+    public Permission getPermissions() {
+        return permissions;
+    }
 }

@@ -40,6 +40,9 @@ public class CommandRankReset implements CommandExecutor {
                 plugin.reload();
                 sender.sendMessage(plugin.tr("command.rankreset.reloaded"));
                 break;
+            case "reset":
+                plugin.triggerReset();
+                break;
             case "help":
             case "?":
             default:

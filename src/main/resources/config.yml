@@ -1,0 +1,9 @@
+last-reset: 0
+
+default-ranks:
+    - default
+
+ranks-to-preserve:
+    - staff
+    - admin
+    - moderator
