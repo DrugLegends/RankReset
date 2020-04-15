@@ -1,0 +1,12 @@
+main: me.rayzr522.rankreset.RankReset
+
+name: ${project.name}
+description: ${project.description}
+version: ${project.version}
+author: Rayzr
+
+commands:
+  rankreset:
+    description: The main command for RankReset.
+    # aliases: []
+    usage: "\u00A7cRayzr hecc'd something up."
