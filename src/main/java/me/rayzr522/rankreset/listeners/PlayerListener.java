@@ -2,6 +2,7 @@ package me.rayzr522.rankreset.listeners;
 
 import me.rayzr522.rankreset.RankReset;
 import net.milkbowl.vault.permission.Permission;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,14 +23,17 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent e) {
         Player player = e.getPlayer();
-        if (player == null || plugin.shouldReset(player)) {
+        if (player == null || !plugin.shouldReset(player)) {
             return;
         }
+
+        plugin.getLogger().info(String.format("Resetting ranks for: %s (uuid: %s)", player.getName(), player.getUniqueId()));
 
         Permission permissions = plugin.getPermissions();
         List<String> ranksToPreserve = plugin.getRanksToPreserve();
 
-        String[] existingGroups = permissions.getPlayerGroups(player);
+        String[] existingGroups = permissions.getPlayerGroups(null, player);
+
         List<String> preservedRanks = Arrays.stream(existingGroups)
                 .filter(ranksToPreserve::contains)
                 .collect(Collectors.toList());
@@ -39,10 +43,15 @@ public class PlayerListener implements Listener {
         finalRanks.addAll(preservedRanks);
         finalRanks.addAll(plugin.getDefaultRanks());
 
-        for (String existingGroup : existingGroups) {
-            permissions.playerRemoveGroup(null, player, existingGroup);
-        }
+        resetPlayerInContext(player, null);
+        Bukkit.getWorlds().forEach(world -> resetPlayerInContext(player, world.getName()));
 
         finalRanks.forEach(rank -> permissions.playerAddGroup(null, player, rank));
+    }
+
+    private void resetPlayerInContext(Player player, String context) {
+        Arrays.stream(plugin.getPermissions().getPlayerGroups(context, player)).forEach(
+                group -> plugin.getPermissions().playerRemoveGroup(context, player, group)
+        );
     }
 }
