@@ -45,7 +45,7 @@ public class RankReset extends JavaPlugin {
         reload();
 
         // Set up commands
-        getCommand("rankreset").setExecutor(new CommandRankReset(this));
+        new CommandRankReset(this).register(getCommand("rankreset"));
 
         getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
     }

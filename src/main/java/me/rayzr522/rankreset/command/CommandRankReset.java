@@ -1,15 +1,33 @@
 package me.rayzr522.rankreset.command;
 
 import me.rayzr522.rankreset.RankReset;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
-import org.bukkit.command.CommandSender;
+import org.bukkit.command.*;
 
-public class CommandRankReset implements CommandExecutor {
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class CommandRankReset implements CommandExecutor, TabCompleter {
     private final RankReset plugin;
 
     public CommandRankReset(RankReset plugin) {
         this.plugin = plugin;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+        if (plugin.checkPermission(sender, "use", false) && args.length == 1) {
+            return Stream.of("version", "reload", "reset", "help")
+                    .filter(arg -> arg.startsWith(args[0].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
+        return null;
+    }
+
+    public void register(PluginCommand command) {
+        command.setExecutor(this);
+        command.setTabCompleter(this);
     }
 
     @Override
