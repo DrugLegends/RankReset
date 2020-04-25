@@ -70,6 +70,10 @@ public class RankReset extends JavaPlugin {
         reloadConfig();
 
         messages.load(getConfig("messages.yml"));
+
+        debug(String.format("Default ranks: %s", String.join(", ", getDefaultRanks())));
+        debug(String.format("Ranks to preserve: %s", String.join(", ", getRanksToPreserve())));
+        debug(String.format("Permissions to remove: %s", String.join(", ", getPermissionsToRemove())));
     }
 
     /**

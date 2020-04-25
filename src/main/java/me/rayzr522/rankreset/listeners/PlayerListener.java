@@ -36,15 +36,20 @@ public class PlayerListener implements Listener {
 
         String[] existingGroups = permissions.getPlayerGroups(null, player);
 
+        plugin.debug(String.format("Existing ranks: %s", String.join(", ", existingGroups)));
+
         List<String> preservedRanks = Arrays.stream(existingGroups)
-                .map(String::toLowerCase)
                 .filter(ranksToPreserve::contains)
                 .collect(Collectors.toList());
+
+        plugin.debug(String.format("Preserved ranks: %s", String.join(", ", preservedRanks)));
 
         List<String> finalRanks = new ArrayList<>();
 
         finalRanks.addAll(preservedRanks);
         finalRanks.addAll(plugin.getDefaultRanks());
+
+        plugin.debug(String.format("Final ranks: %s", String.join(", ", preservedRanks)));
 
         resetPlayerInContext(player).accept(null);
 
@@ -53,7 +58,10 @@ public class PlayerListener implements Listener {
                 .forEach(resetPlayerInContext(player));
 
         plugin.debug(String.format("Giving ranks to player '%s': %s", player.getName(), String.join(", ", finalRanks)));
-        finalRanks.forEach(rank -> permissions.playerAddGroup(null, player, rank));
+        finalRanks.forEach(rank -> {
+            plugin.debug(String.format("Adding rank '%s' for player '%s' in context: null", rank, player.getName()));
+            permissions.playerAddGroup(null, player, rank);
+        });
     }
 
     private Consumer<String> resetPlayerInContext(Player player) {
@@ -65,12 +73,14 @@ public class PlayerListener implements Listener {
                     }
             );
 
-            plugin.getPermissionsToRemove().forEach(
-                    permission -> {
-                        plugin.debug(String.format("Resetting permission '%s' for player '%s' in context: %s", permission, player.getName(), context));
-                        plugin.getPermissions().playerRemove(context, player, permission);
-                    }
-            );
+            plugin.getPermissionsToRemove().stream()
+                    .filter(permission -> plugin.getPermissions().playerHas(context, player, permission))
+                    .forEach(
+                            permission -> {
+                                plugin.debug(String.format("Resetting permission '%s' for player '%s' in context: %s", permission, player.getName(), context));
+                                plugin.getPermissions().playerRemove(context, player, permission);
+                            }
+                    );
         };
     }
 }
