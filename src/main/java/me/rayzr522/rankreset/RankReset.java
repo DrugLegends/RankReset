@@ -169,7 +169,17 @@ public class RankReset extends JavaPlugin {
         return getConfig().getStringList("ranks-to-preserve");
     }
 
+    public List<String> getPermissionsToRemove() {
+        return getConfig().getStringList("permissions-to-remove");
+    }
+
     public Permission getPermissions() {
         return permissions;
+    }
+
+    public void debug(String message) {
+        if (getConfig().getBoolean("debug")) {
+            getLogger().info(message);
+        }
     }
 }

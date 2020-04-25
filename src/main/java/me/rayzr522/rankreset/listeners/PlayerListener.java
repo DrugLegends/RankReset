@@ -3,6 +3,7 @@ package me.rayzr522.rankreset.listeners;
 import me.rayzr522.rankreset.RankReset;
 import net.milkbowl.vault.permission.Permission;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -11,6 +12,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class PlayerListener implements Listener {
@@ -35,6 +37,7 @@ public class PlayerListener implements Listener {
         String[] existingGroups = permissions.getPlayerGroups(null, player);
 
         List<String> preservedRanks = Arrays.stream(existingGroups)
+                .map(String::toLowerCase)
                 .filter(ranksToPreserve::contains)
                 .collect(Collectors.toList());
 
@@ -43,15 +46,31 @@ public class PlayerListener implements Listener {
         finalRanks.addAll(preservedRanks);
         finalRanks.addAll(plugin.getDefaultRanks());
 
-        resetPlayerInContext(player, null);
-        Bukkit.getWorlds().forEach(world -> resetPlayerInContext(player, world.getName()));
+        resetPlayerInContext(player).accept(null);
 
+        Bukkit.getWorlds().stream()
+                .map(World::getName)
+                .forEach(resetPlayerInContext(player));
+
+        plugin.debug(String.format("Giving ranks to player '%s': %s", player.getName(), String.join(", ", finalRanks)));
         finalRanks.forEach(rank -> permissions.playerAddGroup(null, player, rank));
     }
 
-    private void resetPlayerInContext(Player player, String context) {
-        Arrays.stream(plugin.getPermissions().getPlayerGroups(context, player)).forEach(
-                group -> plugin.getPermissions().playerRemoveGroup(context, player, group)
-        );
+    private Consumer<String> resetPlayerInContext(Player player) {
+        return context -> {
+            Arrays.stream(plugin.getPermissions().getPlayerGroups(context, player)).forEach(
+                    group -> {
+                        plugin.debug(String.format("Resetting rank '%s' for player '%s' in context: %s", group, player.getName(), context));
+                        plugin.getPermissions().playerRemoveGroup(context, player, group);
+                    }
+            );
+
+            plugin.getPermissionsToRemove().forEach(
+                    permission -> {
+                        plugin.debug(String.format("Resetting permission '%s' for player '%s' in context: %s", permission, player.getName(), context));
+                        plugin.getPermissions().playerRemove(context, player, permission);
+                    }
+            );
+        };
     }
 }
