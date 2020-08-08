@@ -16,7 +16,3 @@ Also requires that you have [Vault](https://dev.bukkit.org/projects/vault) and a
 4. Run `/rankreset reset`
 
 All players currently on the server will be kicked and, upon rejoining, they will have their ranks reset based on your RankReset config file. Additionally, any players who join in the future that have not joined since the rank reset will have their ranks reset.
-
-## Join Me
-
-[![Discord Badge](https://github.com/Rayzr522/ProjectResources/raw/master/RayzrDev/badge-small.png)](https://rayzr.dev/join)
